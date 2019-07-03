@@ -5,10 +5,16 @@
   "main": "src/index.js",
   "scripts": {
     "start:watch": "nodemon --exec 'ts-node src/index.ts'",
-    "start": "ts-node src/index.ts -1"
+    "start": "ts-node src/index.ts -1",
+    "test": "mocha --require ts-node/register test/**/*.spec.ts",
+    "build": "tsc"
   },
   "dependencies": {
+    "@types/mocha": "5.2.7",
     "@types/node": "10.12.18",
+    "chai": "4.2.0",
+    "mocha": "6.1.4",
+    "sinon": "7.3.2",
     "ts-node": "8.0.1",
     "typescript": "3.2.4"
   },
