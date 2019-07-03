@@ -1,0 +1,19 @@
+{
+  "name": "typescript-node",
+  "version": "1.0.0",
+  "description": "Basic demo of using Typescript on the server side",
+  "main": "src/index.js",
+  "scripts": {
+    "start:watch": "nodemon --exec 'ts-node src/index.ts'",
+    "start": "ts-node src/index.ts -1"
+  },
+  "dependencies": {
+    "@types/node": "10.12.18",
+    "ts-node": "8.0.1",
+    "typescript": "3.2.4"
+  },
+  "devDependencies": {
+    "nodemon": "1.18.4"
+  },
+  "keywords": []
+}
