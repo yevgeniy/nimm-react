@@ -32,7 +32,6 @@ xdescribe("foo", () => {
         );
 
         setTimeout(() => {
-            console.log(foo.args);
             exp(foo.args).to.eql([
                 ["running: 1, 1"],
                 ["effect: 1, 1"],
@@ -59,8 +58,32 @@ describe("tests...", () => {
             exp(boo.args).to.eql([[{ a: 3, b: 4 }]]);
         });
         describe("shutting down...", () => {
-            it("shutds down system", () => {
-                /*todo*/
+            it("shutts down system", c => {
+                const foo = sinon.spy();
+                function a() {
+                    useEffect(() => {
+                        return () => {
+                            foo("terminal a");
+                        };
+                    });
+                }
+                function b() {
+                    useEffect(() => {
+                        return () => {
+                            foo("terminal b");
+                        };
+                    });
+                }
+                const system = root(
+                    component(a, { a: 1, b: 2 }),
+                    component(b, { a: 3, b: 4 })
+                );
+
+                setTimeout(() => {
+                    system.shutdown();
+                    exp(foo.args).to.eql([["terminal a"], ["terminal b"]]);
+                    c();
+                }, 100);
             });
         });
     });
@@ -273,7 +296,6 @@ describe("tests...", () => {
                 );
 
                 setTimeout(() => {
-                    console.log(foo.args);
                     exp(foo.args).to.eql([
                         ["running: 1, 1"],
                         ["effect: 1, 1"],
@@ -286,8 +308,36 @@ describe("tests...", () => {
             });
         });
         describe("shutting down component...", () => {
-            it("runs terminal effects", () => {
-                /*todo*/
+            it("runs terminal effects", c => {
+                const foo = sinon.spy();
+                const comp = ({ b }) => {
+                    foo(`running: ${b}`);
+                    useEffect(() => {
+                        foo(`effect: ${b}`);
+                        return () => {
+                            foo(`terminal: ${b}`);
+                        };
+                    }, []);
+                };
+                root(
+                    component(() => {
+                        const [b, setB] = useState(1);
+                        useEffect(() => {
+                            if (b === 1) setB(2);
+                        });
+                        if (b === 2) return null;
+                        return [component(comp, { b })];
+                    })
+                );
+
+                setTimeout(() => {
+                    exp(foo.args).to.eql([
+                        ["running: 1"],
+                        ["effect: 1"],
+                        ["terminal: 1"]
+                    ]);
+                    c();
+                }, 400);
             });
         });
     });
@@ -334,8 +384,25 @@ describe("tests...", () => {
             });
         });
         describe("change many states at once...", () => {
-            it("component still reruns only once", () => {
-                /*todo*/
+            it("component still reruns only once", c => {
+                /*does so async and does not rerun if setState was the same value*/
+                const INIT_VAL = 2;
+                const NEW_VAL = 3;
+                const foo = sinon.spy();
+                const comp = sinon.spy(props => {
+                    const [a, setA] = useState(INIT_VAL);
+                    const [b, setB] = useState(INIT_VAL);
+
+                    setA(NEW_VAL);
+                    setB(NEW_VAL);
+                    foo(a);
+                });
+                root(component(comp, { a: 1, b: 2 }));
+
+                setImmediate(() => {
+                    exp(comp.args).to.eql([[{ a: 1, b: 2 }], [{ a: 1, b: 2 }]]);
+                    c();
+                });
             });
         });
         describe("attempt to hook mismatch...", () => {
