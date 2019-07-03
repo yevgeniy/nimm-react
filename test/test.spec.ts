@@ -3,24 +3,19 @@ var sinon = require("sinon");
 var { root, component, useEffect, useState } = require("../src/index");
 
 xdescribe("foo", () => {
-    // it("are rerun only if props changed", c => {
-    //     const foo = sinon.spy(props => console.log("RAN FOO", props));
-    //     const boo = sinon.spy(props => console.log("RAN BOO", props));
-    //     const comp = props => {
-    //         const [a, setA] = useState(1);
-    //         setA(2);
-    //         return [
-    //             component(foo, { a: 1, b: 1 }),
-    //             component(boo, { a: a, b: 1 })
-    //         ];
-    //     };
-    //     root(component(comp));
-    //     setImmediate(() => {
-    //         exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
-    //         exp(boo.args).to.eql([[{ a: 1, b: 1 }], [{ a: 2, b: 1 }]]);
-    //         c();
-    //     });
-    // });
+    it("runs async after component", c => {
+        const foo = sinon.spy();
+        function comp(props) {
+            useEffect(foo);
+        }
+        root(component(comp, { a: 1, b: 2 }));
+
+        exp(foo.args).to.eql([]);
+        setTimeout(() => {
+            exp(foo.args).to.eql([[]]);
+            c();
+        }, 100);
+    });
 });
 
 describe("tests...", () => {
@@ -35,6 +30,11 @@ describe("tests...", () => {
 
             exp(foo.args).to.eql([[{ a: 1, b: 2 }]]);
             exp(boo.args).to.eql([[{ a: 3, b: 4 }]]);
+        });
+        describe("shutting down...", () => {
+            it("shutds down system", () => {
+                /*todo*/
+            });
         });
     });
 
@@ -70,7 +70,36 @@ describe("tests...", () => {
                     c();
                 });
             });
-            it("old components are removed", () => {});
+            it("old components are removed", c => {
+                const foo = sinon.spy();
+                const boo = sinon.spy();
+                const moo = sinon.spy();
+                const comp = props => {
+                    const [a, setA] = useState(1);
+                    setA(2);
+                    if (a === 2) {
+                        return [component(moo, { a: a, b: 1 })];
+                    }
+                    return [
+                        component(foo, { a: a, b: 1 }),
+                        component(boo, { a: a, b: 1 })
+                    ];
+                };
+
+                root(component(comp));
+
+                setImmediate(() => {
+                    exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
+                    exp(boo.args).to.eql([[{ a: 1, b: 1 }]]);
+                    exp(moo.args).to.eql([[{ a: 2, b: 1 }]]);
+                    c();
+                });
+            });
+        });
+        describe("shut down component...", () => {
+            it("throws error when state set", () => {
+                /*todo*/
+            });
         });
     });
 
@@ -83,9 +112,50 @@ describe("tests...", () => {
             root(component(comp, { a: 1, b: 2 }));
 
             exp(foo.args).to.eql([]);
-            setImmediate(() => {
+            setTimeout(() => {
                 exp(foo.args).to.eql([[]]);
                 c();
+            }, 100);
+        });
+        describe("useEffect outside component...", () => {
+            it("throws error", () => {
+                /*todo*/
+            });
+        });
+        describe("before rerun...", () => {
+            it("runs terminal effect", c => {
+                const foo = sinon.spy();
+                root(
+                    component(
+                        function() {
+                            const [a, setA] = useState(1);
+
+                            useEffect(() => {
+                                setA(2);
+                                foo(`effect ${a}`);
+                                return () => {
+                                    foo(`terminal ${a}`);
+                                };
+                            });
+                        },
+                        { a: 1, b: 2 }
+                    )
+                );
+
+                setTimeout(() => {
+                    exp(foo.args).to.eql([
+                        ["effect 1"],
+                        ["terminal 1"],
+                        ["effect 2"]
+                    ]);
+                    c();
+                }, 100);
+            });
+        });
+
+        describe("shutting down component...", () => {
+            it("runs terminal effects", () => {
+                /*todo*/
             });
         });
     });
@@ -119,6 +189,21 @@ describe("tests...", () => {
                 exp(comp.args).to.eql([[{ a: 1, b: 2 }], [{ a: 1, b: 2 }]]);
                 exp(foo.args).to.eql([[2], [3]]);
                 c();
+            });
+        });
+        describe("useState outside component...", () => {
+            it("throws error", () => {
+                /*todo*/
+            });
+        });
+        describe("useState on shutdown component...", () => {
+            it("throws error", () => {
+                /*todo*/
+            });
+        });
+        describe("attempt to hook mismatch...", () => {
+            it("throw error", () => {
+                /*todo*/
             });
         });
     });
