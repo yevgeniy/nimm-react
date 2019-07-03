@@ -3,18 +3,45 @@ var sinon = require("sinon");
 var { root, component, useEffect, useState } = require("../src/index");
 
 xdescribe("foo", () => {
-    it("runs async after component", c => {
+    it("runs terminal when shutting down", c => {
         const foo = sinon.spy();
-        function comp(props) {
-            useEffect(foo);
-        }
-        root(component(comp, { a: 1, b: 2 }));
+        const comp = ({ b }) => {
+            const [a, setA] = useState(1);
+            foo(`running: ${a}, ${b}`);
+            useEffect(() => {
+                foo(`effect: ${a}, ${b}`);
+                return () => {
+                    foo(`terminal: ${a}, ${b}`);
+                };
+            }, []);
 
-        exp(foo.args).to.eql([]);
+            useEffect(() => {
+                setA(2);
+            });
+        };
+        root(
+            component(() => {
+                const [b, setB] = useState(1);
+                useEffect(() => {
+                    if (b === 1) setB(2);
+                    if (b === 2) setB(3);
+                });
+                if (b === 3) return null;
+                return [component(comp, { b })];
+            })
+        );
+
         setTimeout(() => {
-            exp(foo.args).to.eql([[]]);
+            console.log(foo.args);
+            exp(foo.args).to.eql([
+                ["running: 1, 1"],
+                ["effect: 1, 1"],
+                ["running: 2, 1"],
+                ["running: 2, 2"],
+                ["terminal: 1, 1"]
+            ]);
             c();
-        }, 100);
+        }, 400);
     });
 });
 
@@ -152,7 +179,112 @@ describe("tests...", () => {
                 }, 100);
             });
         });
+        describe("giving 2nd arg vals...", () => {
+            it("reruns effect only if any args change", c => {
+                const foo = sinon.spy();
+                function comp() {
+                    const [a, setA] = useState(1);
+                    const [b, setB] = useState(1);
+                    const [c, setC] = useState(1);
 
+                    foo(`running: ${a}, ${b}, ${c}`);
+                    useEffect(() => {
+                        foo(`effect: ${a}, ${b}, ${c}`);
+                    }, [a, c]);
+                    useEffect(() => {
+                        if (b === 1) setB(2);
+                        if (b === 2) setC(2);
+                        if (c === 2) setA(2);
+                    });
+                }
+                root(component(comp));
+
+                setTimeout(() => {
+                    exp(foo.args).to.eql([
+                        ["running: 1, 1, 1"],
+                        ["effect: 1, 1, 1"],
+                        ["running: 1, 2, 1"],
+                        ["running: 1, 2, 2"],
+                        ["effect: 1, 2, 2"],
+                        ["running: 2, 2, 2"],
+                        ["effect: 2, 2, 2"]
+                    ]);
+                    c();
+                }, 400);
+            });
+        });
+        describe("giving empty 2nd args...", () => {
+            it("never reruns", c => {
+                const foo = sinon.spy();
+                function comp() {
+                    const [a, setA] = useState(1);
+                    const [b, setB] = useState(1);
+                    const [c, setC] = useState(1);
+
+                    foo(`running: ${a}, ${b}, ${c}`);
+                    useEffect(() => {
+                        foo(`effect: ${a}, ${b}, ${c}`);
+                    }, []);
+                    useEffect(() => {
+                        if (b === 1) setB(2);
+                        if (b === 2) setC(2);
+                        if (c === 2) setA(2);
+                    });
+                }
+                root(component(comp));
+
+                setTimeout(() => {
+                    exp(foo.args).to.eql([
+                        ["running: 1, 1, 1"],
+                        ["effect: 1, 1, 1"],
+                        ["running: 1, 2, 1"],
+                        ["running: 1, 2, 2"],
+                        ["running: 2, 2, 2"]
+                    ]);
+                    c();
+                }, 400);
+            });
+            it("runs terminal when shutting down", c => {
+                const foo = sinon.spy();
+                const comp = ({ b }) => {
+                    const [a, setA] = useState(1);
+                    foo(`running: ${a}, ${b}`);
+                    useEffect(() => {
+                        foo(`effect: ${a}, ${b}`);
+                        return () => {
+                            foo(`terminal: ${a}, ${b}`);
+                        };
+                    }, []);
+
+                    useEffect(() => {
+                        setA(2);
+                    });
+                };
+                root(
+                    component(() => {
+                        const [b, setB] = useState(1);
+                        useEffect(() => {
+                            if (b === 1) setB(2);
+                            if (b === 2) setB(3);
+                        });
+                        if (b === 3) return null;
+                        return [component(comp, { b })];
+                    })
+                );
+
+                setTimeout(() => {
+                    console.log(foo.args);
+                    exp(foo.args).to.eql([
+                        ["running: 1, 1"],
+                        ["effect: 1, 1"],
+                        ["running: 2, 1"],
+                        ["running: 2, 2"],
+                        ["terminal: 1, 1"]
+                    ]);
+                    c();
+                }, 400);
+            });
+        });
         describe("shutting down component...", () => {
             it("runs terminal effects", () => {
                 /*todo*/
@@ -198,6 +330,11 @@ describe("tests...", () => {
         });
         describe("useState on shutdown component...", () => {
             it("throws error", () => {
+                /*todo*/
+            });
+        });
+        describe("change many states at once...", () => {
+            it("component still reruns only once", () => {
                 /*todo*/
             });
         });

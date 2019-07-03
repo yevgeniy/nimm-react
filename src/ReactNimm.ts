@@ -3,6 +3,7 @@ interface RepositoryEntry {
     props: any;
     hooks: any;
     children: RepositoryEntry[];
+    active: boolean;
 }
 let CurrentComponent: RepositoryEntry = null;
 let CurrentHook: number = null;
@@ -16,7 +17,8 @@ export function root(...components) {
             component: v.component,
             props: v.props,
             hooks: [],
-            children: []
+            children: [],
+            active: true
         };
     });
 
@@ -36,7 +38,7 @@ export function component(component, props) {
         props
     };
 }
-export function useEffect(fn) {
+export function useEffect(fn, args) {
     const comp = CurrentComponent;
     if (!comp) throw "running state outside of component";
 
@@ -45,10 +47,14 @@ export function useEffect(fn) {
         comp.hooks.push({
             type: useEffect,
             fn: fn,
-            terminal: null
+            args: null,
+            terminal: null,
+            run: null
         });
     const hook = comp.hooks[hookIndex];
     hook.fn = fn;
+    hook.run = !shallowCompare(hook.args, args);
+    hook.args = args;
 }
 export function useState(def) {
     const comp = CurrentComponent;
@@ -61,7 +67,6 @@ export function useState(def) {
             val: def
         });
     const val = comp.hooks[hookIndex].val;
-    console.log("CURRENT:", val);
     const setVal = newval => {
         if (newval === val) return;
         comp.hooks[hookIndex].val = newval;
@@ -74,45 +79,53 @@ function runComponent(parentComp: RepositoryEntry) {
     CurrentComponent = parentComp;
     CurrentHook = -1;
 
-    const components = parentComp.component(parentComp.props);
-    if (components) {
-        const comps = components.map(v => {
-            return {
-                component: v.component,
-                props: v.props,
-                hooks: [],
-                children: []
-            };
-        });
+    const components = parentComp.component(parentComp.props) || [];
 
-        const runComponents = [];
-        comps.forEach((comp, i) => {
-            if (!parentComp.children[i]) {
-                parentComp.children[i] = comp;
-                runComponents.push(comp);
-            } else if (parentComp.children[i].component !== comp.component) {
-                shutdownComponent(parentComp.children[i]);
-                parentComp.children[i] = comp;
-                runComponents.push(comp);
-            } else if (
-                !shallowCompare(
-                    comp.props || {},
-                    parentComp.children[i].props || {}
-                )
-            ) {
-                runComponents.push(comp);
-            }
-        });
+    const comps = components.map(v => {
+        return {
+            component: v.component,
+            props: v.props,
+            hooks: [],
+            children: [],
+            active: true
+        };
+    });
 
-        runComponents.forEach(runComponent);
-    }
+    const runComponents = [];
+    comps.forEach((comp, i) => {
+        if (!parentComp.children[i]) {
+            parentComp.children[i] = comp;
+            runComponents.push(comp);
+        } else if (parentComp.children[i].component !== comp.component) {
+            shutdownComponent(parentComp.children[i]);
+            parentComp.children[i] = comp;
+            runComponents.push(comp);
+        } else if (
+            !shallowCompare(
+                comp.props || {},
+                parentComp.children[i].props || {}
+            )
+        ) {
+            parentComp.children[i].props = comp.props;
+            runComponents.push(parentComp.children[i]);
+        }
+    });
 
+    /*shutdown all other components exceeding current comp lenth*/
+    parentComp.children.splice(comps.length).forEach(shutdownComponent);
+
+    runComponents.forEach(runComponent);
+
+    CurrentComponent = parentComp;
     /*run effect hooks*/
     parentComp.hooks.forEach(hook => {
-        hook.terminal && hook.terminal();
-        if (hook.type === useEffect)
+        if (hook.type === useEffect && hook.run) {
+            hook.terminal && hook.terminal();
             setImmediate(() => (hook.terminal = hook.fn()));
+        }
     });
+
+    CurrentComponent = null;
 }
 function queueRerun(comp: RepositoryEntry) {
     if (RerunQueue.indexOf(comp) > -1) return;
@@ -131,8 +144,18 @@ function queue_run() {
     };
     queuet = setImmediate(work);
 }
-function shutdownComponent(comp: RepositoryEntry) {}
+function shutdownComponent(comp: RepositoryEntry) {
+    comp.active = false;
+    comp.hooks
+        .filter(v => v.type === useEffect && v.terminal)
+        .forEach(v => v.terminal());
+}
 function shallowCompare(obj1, obj2) {
+    if (!obj1 || !obj2) return false;
+
+    if (Object.keys(obj1).length === 0 && Object.keys(obj2).length === 0)
+        return true;
+
     return (
         Object.keys(obj1).length === Object.keys(obj2).length &&
         Object.keys(obj1).every(key => obj1[key] === obj2[key])
