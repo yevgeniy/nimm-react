@@ -1,4 +1,4 @@
-interface RepositoryEntry {
+export interface RepositoryEntry {
     component: (props: any) => any;
     props: any;
     hooks: any;
