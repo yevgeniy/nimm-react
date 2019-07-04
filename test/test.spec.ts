@@ -90,6 +90,16 @@ describe("tests...", () => {
 
     describe("components...", () => {
         describe("components returned from components...", () => {
+            it('can return single component', ()=> {
+                const foo = sinon.spy(props => {});
+                const comp = props => {
+                    return component(foo, { a: 1, b: 1 });
+                };
+
+                root(component(comp));
+
+                exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
+            });
             it("are run if new", () => {
                 const foo = sinon.spy(props => {});
                 const comp = props => {

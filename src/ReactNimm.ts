@@ -12,6 +12,7 @@ let RerunQueue: RepositoryEntry[] = [];
 export const Root: RepositoryEntry[] = [];
 
 export function root(...components) {
+
     const comps = components.map(v => {
         return {
             component: v.component,
@@ -79,7 +80,8 @@ function runComponent(parentComp: RepositoryEntry) {
     CurrentComponent = parentComp;
     CurrentHook = -1;
 
-    const components = parentComp.component(parentComp.props) || [];
+    let components = parentComp.component(parentComp.props) || [];
+    components = components.constructor===Array ? components : [components];
 
     const comps = components.map(v => {
         return {
