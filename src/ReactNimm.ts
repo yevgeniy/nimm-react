@@ -73,7 +73,10 @@ export function useState(def) {
         comp.hooks[hookIndex].val = newval;
         queueRerun(comp);
     };
-    return [val, setVal];
+    const rerun=()=> {
+        queueRerun(comp);
+    }
+    return [val, setVal, rerun];
 }
 
 function runComponent(parentComp: RepositoryEntry) {
