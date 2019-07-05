@@ -65,17 +65,21 @@ export function useState(def) {
     if (comp.hooks.length - 1 < hookIndex)
         comp.hooks.push({
             type: useState,
-            val: def
+            val: def,
+            setVal: newval => {
+                const val = comp.hooks[hookIndex].val;
+                if (newval === val) return;
+                comp.hooks[hookIndex].val = newval;
+                queueRerun(comp);
+            },
+            rerun:()=> {
+                queueRerun(comp);
+            }
         });
     const val = comp.hooks[hookIndex].val;
-    const setVal = newval => {
-        if (newval === val) return;
-        comp.hooks[hookIndex].val = newval;
-        queueRerun(comp);
-    };
-    const rerun=()=> {
-        queueRerun(comp);
-    }
+    const setVal = comp.hooks[hookIndex].setVal;
+    const rerun=comp.hooks[hookIndex].rerun;
+    
     return [val, setVal, rerun];
 }
 

@@ -383,6 +383,23 @@ describe("tests...", () => {
                 c();
             });
         });
+        describe('setVal...',()=> {
+            it('always has the same reference', c=> {
+                const foo=sinon.spy();
+                root(component(()=> {
+                    const[a,setA]=useState(1);
+
+                    setA(2);
+
+                    return component(foo, {setA})
+                }));
+                setTimeout(()=> {
+                    exp(foo.args.length).to.equal(1);
+                    
+                    c();
+                },100)
+            });
+        })
         describe("useState outside component...", () => {
             it("throws error", () => {
                 /*todo*/
