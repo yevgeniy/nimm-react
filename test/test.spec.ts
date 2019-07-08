@@ -3,45 +3,32 @@ var sinon = require("sinon");
 var { root, component, useEffect, useState } = require("../src/index");
 
 xdescribe("foo", () => {
-    it("runs terminal when shutting down", c => {
-        const foo = sinon.spy();
-        const comp = ({ b }) => {
-            const [a, setA] = useState(1);
-            foo(`running: ${a}, ${b}`);
-            useEffect(() => {
-                foo(`effect: ${a}, ${b}`);
-                return () => {
-                    foo(`terminal: ${a}, ${b}`);
-                };
-            }, []);
+    it('executes set val on universal queue', c=> {
+        const foo=sinon.spy();
+        root(component(()=> {
+            const[a,setA]=useState(1);
 
-            useEffect(() => {
-                setA(2);
-            });
-        };
-        root(
-            component(() => {
-                const [b, setB] = useState(1);
-                useEffect(() => {
-                    if (b === 1) setB(2);
-                    if (b === 2) setB(3);
+            useEffect(()=> {
+                setA(async a=> {
+                    foo('b',a);
+                    await new Promise(res=>setTimeout(res,100))
+
+                    return a+1;
                 });
-                if (b === 3) return null;
-                return [component(comp, { b })];
-            })
-        );
+                setA(a=> {
+                    foo('c',a);
+                    return a+1;
+                })
+            },[]);
 
-        setTimeout(() => {
-            exp(foo.args).to.eql([
-                ["running: 1, 1"],
-                ["effect: 1, 1"],
-                ["running: 2, 1"],
-                ["running: 2, 2"],
-                ["terminal: 1, 1"]
-            ]);
+            foo('a',a);
+        }));
+        setTimeout(()=> {
+            exp(foo.args).to.eql([ [ 'a', 1 ], [ 'b', 1 ], [ 'c', 2 ], [ 'a', 3 ] ]);
+            
             c();
-        }, 400);
-    });
+        },1000)
+    })
 });
 
 describe("tests...", () => {
@@ -399,6 +386,34 @@ describe("tests...", () => {
                     c();
                 },100)
             });
+            describe('using funciton...', ()=> {
+                it('executes set val on universal queue', c=> {
+                    const foo=sinon.spy();
+                    root(component(()=> {
+                        const[a,setA]=useState(1);
+            
+                        useEffect(()=> {
+                            setA(async a=> {
+                                foo('b',a);
+                                await new Promise(res=>setTimeout(res,100))
+            
+                                return a+1;
+                            });
+                            setA(a=> {
+                                foo('c',a);
+                                return a+1;
+                            })
+                        },[]);
+            
+                        foo('a',a);
+                    }));
+                    setTimeout(()=> {
+                        exp(foo.args).to.eql([ [ 'a', 1 ], [ 'b', 1 ], [ 'c', 2 ], [ 'a', 3 ] ]);
+                        
+                        c();
+                    },1000)
+                });
+            })
         })
         describe("useState outside component...", () => {
             it("throws error", () => {
