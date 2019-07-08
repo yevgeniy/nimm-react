@@ -116,7 +116,7 @@ export function useState(def) {
             type: useState,
             val: def,
             setVal: (newval:any) => {
-                if (newval.constructor===Function) {                             
+                if (newval && newval.constructor===Function) {                             
                     setvalpipe = setvalpipe.then(()=>{
                         var n= newval(comp.hooks[hookIndex].val);
                         return new Promise(res=>res(n)).then(n=> {
