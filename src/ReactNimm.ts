@@ -106,7 +106,7 @@ export function useEffect(fn, args) {
     hook.args = args;
 }
 let setvalpipe=new Promise(res=>res());
-export function useState(def, args) {
+export function useState(def) {
     const comp = CurrentComponent;
     if (!comp) throw "running state outside of component";
 
@@ -115,7 +115,6 @@ export function useState(def, args) {
         comp.hooks.push({
             type: useState,
             val: def,
-            args:null,
             setVal: (newval:any) => {
                 if (newval && newval.constructor===Function) {                             
                     setvalpipe = setvalpipe.then(()=>{
@@ -138,11 +137,6 @@ export function useState(def, args) {
                 queueRerun(comp);
             }
         });
-    
-    if (!shallowCompare(comp.hooks[hookIndex].args, args)) {
-        comp.hooks[hookIndex].val=def;
-        comp.hooks[hookIndex].args=args;
-    }
 
     const val = comp.hooks[hookIndex].val;
     const setVal = comp.hooks[hookIndex].setVal;
