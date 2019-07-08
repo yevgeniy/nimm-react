@@ -1,3 +1,51 @@
+export class Promise {
+    constructor(fn) {
+        fn(this.resolve);
+    }
+    state=0;
+    ondone=[];
+    resolveval=undefined;
+    then=(fn)=> {
+        return new Promise(res=> {
+            this.ondone.push(()=> {
+                var r=fn(this.resolveval);
+                res(r);
+            });
+            if (this.state==1)
+                this.runResolvers();
+        });
+    }
+    resolve=(val)=> {
+        this.resolve=function(){};
+
+        if (val && val.then)
+            val.then(v=> {
+          
+                this.state=1;
+                this.resolveval=v;
+                this.runResolvers();
+            })
+        else {
+            this.state=1;
+            this.resolveval=val;
+            this.runResolvers();
+        }
+        
+    }
+    running=false;
+    runResolvers=()=> {
+        if (this.running)
+            return;
+        this.running=true;
+
+        let d;
+        while(d=this.ondone.shift()) {
+            d(this.resolveval);
+        }
+        this.running=false;
+    }
+}
+
 export interface RepositoryEntry {
     component: (props: any) => any;
     props: any;
@@ -57,7 +105,7 @@ export function useEffect(fn, args) {
     hook.run = !shallowCompare(hook.args, args);
     hook.args = args;
 }
-let setvalpipe=new Promise<any>(res=>res());
+let setvalpipe=new Promise(res=>res());
 export function useState(def) {
     const comp = CurrentComponent;
     if (!comp) throw "running state outside of component";

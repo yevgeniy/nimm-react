@@ -1,6 +1,7 @@
 var exp = require("chai").expect;
 var sinon = require("sinon");
-var { root, component, useEffect, useState } = require("../src/index");
+// @ts-ignore
+var { root, component, useEffect, useState, Promise } = require("../src/index");
 
 xdescribe("foo", () => {
     it('executes set val on universal queue', c=> {
@@ -9,13 +10,18 @@ xdescribe("foo", () => {
             const[a,setA]=useState(1);
 
             useEffect(()=> {
-                setA(async a=> {
-                    foo('b',a);
-                    await new Promise(res=>setTimeout(res,100))
+                setA(a=> {
+                    foo('b',a);                    
 
-                    return a+1;
+                    var p = new Promise(res=>setTimeout(res,100))
+                        .then(()=> {
+                            return a+1
+                        });
+
+                    return p;
                 });
                 setA(a=> {
+
                     foo('c',a);
                     return a+1;
                 })
@@ -393,13 +399,18 @@ describe("tests...", () => {
                         const[a,setA]=useState(1);
             
                         useEffect(()=> {
-                            setA(async a=> {
-                                foo('b',a);
-                                await new Promise(res=>setTimeout(res,100))
+                            setA(a=> {
+                                foo('b',a);                    
             
-                                return a+1;
+                                var p = new Promise(res=>setTimeout(res,100))
+                                    .then(()=> {
+                                        return a+1
+                                    });
+            
+                                return p;
                             });
                             setA(a=> {
+            
                                 foo('c',a);
                                 return a+1;
                             })
@@ -412,7 +423,7 @@ describe("tests...", () => {
                         
                         c();
                     },1000)
-                });
+                })
             })
         })
         describe("useState outside component...", () => {
