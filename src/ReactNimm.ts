@@ -92,15 +92,22 @@ export function useEffect(fn, args) {
     if (!comp) throw "running state outside of component";
 
     const hookIndex = ++CurrentHook;
-    if (comp.hooks.length - 1 < hookIndex)
+    let hook=null;
+    if (comp.hooks.length - 1 < hookIndex) {
         comp.hooks.push({
             type: useEffect,
+            phase:'mount',
             fn: fn,
             args: null,
             terminal: null,
             run: null
         });
-    const hook = comp.hooks[hookIndex];
+        hook = comp.hooks[hookIndex];
+    } else {
+        hook = comp.hooks[hookIndex];
+        hook.phase='update';
+    }
+
     hook.fn = fn;
     hook.run = !shallowCompare(hook.args, args);
     hook.args = args;
@@ -192,7 +199,7 @@ function runComponent(parentComp: RepositoryEntry) {
     parentComp.hooks.forEach(hook => {
         if (hook.type === useEffect && hook.run) {
             hook.terminal && hook.terminal();
-            setImmediate(() => (hook.terminal = hook.fn()));
+            setImmediate(() => (hook.terminal = hook.fn(hook)));
         }
     });
 
