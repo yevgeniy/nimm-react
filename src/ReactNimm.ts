@@ -151,6 +151,23 @@ export function useState(def) {
     
     return [val, setVal, rerun];
 }
+export function useRef() {
+    const comp = CurrentComponent;
+    if (!comp) throw "running state outside of component";
+
+    const hookIndex = ++CurrentHook;
+    if (comp.hooks.length - 1 < hookIndex)
+        comp.hooks.push({
+            type: useRef,
+            val: {
+                current:null
+            }
+        });
+
+    const val = comp.hooks[hookIndex].val;
+    
+    return val;
+}
 
 function runComponent(parentComp: RepositoryEntry) {
     CurrentComponent = parentComp;
@@ -199,7 +216,7 @@ function runComponent(parentComp: RepositoryEntry) {
     parentComp.hooks.forEach(hook => {
         if (hook.type === useEffect && hook.run) {
             hook.terminal && hook.terminal();
-            setImmediate(() => (hook.terminal = hook.fn(hook)));
+            setImmediate(() => (hook.terminal = hook.fn()));
         }
     });
 

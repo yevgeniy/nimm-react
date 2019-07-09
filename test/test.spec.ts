@@ -1,7 +1,7 @@
 var exp = require("chai").expect;
 var sinon = require("sinon");
 // @ts-ignore
-var { root, component, useEffect, useState, Promise } = require("../src/index");
+var { root, component, useRef, useEffect, useState, Promise } = require("../src/index");
 
 xdescribe("foo", () => {
     it('executes set val on universal queue', c=> {
@@ -344,6 +344,35 @@ describe("tests...", () => {
             });
         });
     });
+    describe('useRef...', ()=> {
+        it('retains same ref', c=> {
+            const foo = sinon.spy();
+            const sub={foo:1};
+            function comp(props) {
+                var a=useRef();
+                var [b,setB]=useState(1);
+                
+                console.log('rerun');
+                useEffect(()=> {
+                    console.log('set')
+                    a.current=sub;
+                },[])
+                
+                useEffect(()=> {
+                    if (b<3)
+                        setB(b=>b+1);
+                })
+
+                foo(a.current);
+            }
+            root(component(comp));
+
+            setTimeout(() => {
+                exp(foo.args[1][0]).to.equal(foo.args[2][0])
+                c();
+            }, 500);
+        })
+    })
     describe("useState...", () => {
         it("default val first time", () => {
             const VAL = 2;
