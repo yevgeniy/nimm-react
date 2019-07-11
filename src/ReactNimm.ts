@@ -169,6 +169,35 @@ export function useRef() {
     return val;
 }
 
+export function useResetableState(def, props) {
+    const [val, setVal, rerun, guts]=useState(def);
+    const oldprops=guts.props;
+    guts.props=props;
+    let reset=false;
+
+    const o=oldprops||[];
+    const n=props||[];
+    if (o.length !==n.length)
+        reset=true;
+    else
+        for(let x=0; x<o.length; x++) {
+            if (o[x]!==n[x]) {
+                reset=true;
+                break;
+            }
+        }
+    
+    if (reset) {
+        guts.val=def;
+    }
+    
+    return [guts.val, setVal, rerun, guts];
+}
+export function useCallback(fn, props) {
+    const [res]=useResetableState(fn,props);
+    return res;
+}
+
 function runComponent(parentComp: RepositoryEntry) {
     CurrentComponent = parentComp;
     CurrentHook = -1;

@@ -1,7 +1,7 @@
 var exp = require("chai").expect;
 var sinon = require("sinon");
 // @ts-ignore
-var { root, component, useRef, useEffect, useState, Promise } = require("../src/index");
+var { root, component, useRef, useEffect, useState, useResetableState, Promise } = require("../src/index");
 
 xdescribe("foo", () => {
     it('executes set val on universal queue', c=> {
@@ -352,9 +352,7 @@ describe("tests...", () => {
                 var a=useRef();
                 var [b,setB]=useState(1);
                 
-                console.log('rerun');
                 useEffect(()=> {
-                    console.log('set')
                     a.current=sub;
                 },[])
                 
@@ -373,6 +371,84 @@ describe("tests...", () => {
             }, 500);
         })
     })
+    describe('useResetableState...', ()=> {
+        describe('works like useState', ()=> {
+            it("default val first time", () => {
+                const VAL = 2;
+                const foo = sinon.spy();
+                function comp(props) {
+                    const [a] = useResetableState(VAL);
+                    foo(a);
+                }
+                root(component(comp, { a: 1, b: 2 }));
+    
+                exp(foo.args).to.eql([[2]]);
+            });
+            it("reevaluate component when state changes", c => {
+                /*does so async and does not rerun if setState was the same value*/
+                const INIT_VAL = 2;
+                const NEW_VAL = 3;
+                const foo = sinon.spy();
+                const comp = sinon.spy(props => {
+                    const [a, setA] = useResetableState(INIT_VAL);
+    
+                    setA(NEW_VAL);
+                    foo(a);
+                });
+                root(component(comp, { a: 1, b: 2 }));
+    
+                exp(comp.args).to.eql([[{ a: 1, b: 2 }]]);
+                setImmediate(() => {
+                    exp(comp.args).to.eql([[{ a: 1, b: 2 }], [{ a: 1, b: 2 }]]);
+                    exp(foo.args).to.eql([[2], [3]]);
+                    c();
+                });
+            });
+            describe('supplying args...', ()=> {
+                it('resets when args change...', c=> {
+                    const foo = sinon.spy();
+                    const comp = ()=> {
+                        const [r, setR]=useState(1);
+                        const [r2, setR2]=useState(1);
+                        const [a, setA] = useResetableState(1,[r,r2]);
+        
+                        useEffect(()=> {
+                            setA(a=>a < 4 ? a+1 : 4);
+
+                            if (a===2)
+                                setR(r=>r < 2 ? 2 : r);
+                            if (a===3)
+                                setR2(r=>r < 2 ? 2 : r);
+                            if (a===4) {
+                                setR(r=>r < 3 ? 3 : r);
+                                setR2(r=>r < 3 ? 3 : r);
+                            }
+                        })
+
+                        foo(a);
+                    };
+                    root(component(comp));
+        
+                    setTimeout(() => {
+                        exp(foo.args).to.eql([ [ 1 ],
+                            [ 2 ],
+                            [ 1 ],
+                            [ 2 ],
+                            [ 3 ],
+                            [ 1 ],
+                            [ 2 ],
+                            [ 3 ],
+                            [ 4 ],
+                            [ 1 ],
+                            [ 2 ],
+                            [ 3 ],
+                            [ 4 ] ])
+                        c();
+                    },1000);
+                })
+            })
+        })
+    });
     describe("useState...", () => {
         it("default val first time", () => {
             const VAL = 2;

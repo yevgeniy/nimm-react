@@ -83,10 +83,24 @@ setA(a=> { // a is 2  and returns 3;
 }) 
 ```
 
+Use State also exposes the guts of the hook as a 4th variable.
+
 ### useEffect
 
 Just like useEffect in React https://reactjs.org/docs/hooks-state.html
 
 ### useRef
 
-Just like useRef in React https://reactjs.org/docs/hooks-state.html
+Just like useRef in React https://reactjs.org/docs/hooks-effect.html
+
+### useCallback
+
+Juse like useCallback in React https://reactjs.org/docs/hooks-reference.html#usecallback
+
+### useResetableState
+
+If you think about it, useCallback is just like useState but with ability to reset it.  So there you go, enjoy.
+
+```
+const [val, setVal, _rerun, _guts] = useResetableState(img.username, [img.id]);
+```
