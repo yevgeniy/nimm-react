@@ -149,7 +149,7 @@ export function useState(def) {
     const setVal = comp.hooks[hookIndex].setVal;
     const rerun=comp.hooks[hookIndex].rerun;
     
-    return [val, setVal, rerun];
+    return [val, setVal, rerun, comp.hooks[hookIndex]];
 }
 export function useRef() {
     const comp = CurrentComponent;
