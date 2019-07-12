@@ -38,7 +38,7 @@ xdescribe("foo", () => {
     })
 });
 
-xdescribe("tests...", () => {
+describe("tests...", () => {
     describe("init...", () => {
         it("components run when supplied", () => {
             const foo = sinon.spy();

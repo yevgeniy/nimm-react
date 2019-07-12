@@ -202,7 +202,6 @@ function runComponent(subjectComponent: RepositoryEntry) {
     CurrentComponent = subjectComponent;
     CurrentHook = -1;
 
-    console.log(subjectComponent)
     let components = subjectComponent.component(subjectComponent.props) || [];
     components = components.constructor===Array ? components : [components];
 
