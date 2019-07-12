@@ -4,40 +4,41 @@ var sinon = require("sinon");
 var { root, component, useRef, useEffect, useState, useResetableState, Promise } = require("../src/index");
 
 xdescribe("foo", () => {
-    it('executes set val on universal queue', c=> {
-        const foo=sinon.spy();
-        root(component(()=> {
-            const[a,setA]=useState(1);
+    it('should be removed', c=> {
+        const foo = sinon.spy();
+        
+        const prom=new Promise(res=>setTimeout(res,500));
+        const useTrigger=(b)=> {
+            const [a,setA]=useState(1);
 
             useEffect(()=> {
-                setA(a=> {
-                    foo('b',a);                    
-
-                    var p = new Promise(res=>setTimeout(res,100))
-                        .then(()=> {
-                            return a+1
-                        });
-
-                    return p;
-                });
-                setA(a=> {
-
-                    foo('c',a);
-                    return a+1;
-                })
-            },[]);
-
-            foo('a',a);
-        }));
-        setTimeout(()=> {
-            exp(foo.args).to.eql([ [ 'a', 1 ], [ 'b', 1 ], [ 'c', 2 ], [ 'a', 3 ] ]);
+                if (a===1)
+                    prom.then(v=>setA(2))
+            })
             
+
+            return {a, b}
+        }
+        const childComp=()=> {
+            const a= useTrigger('child');
+            foo(a);
+        }
+        root(component(()=> {
+
+            const a=useTrigger('parent');
+
+            foo(a);
+            return component(childComp, {...a});
+        }))
+
+        setTimeout(()=> {
+            console.log(foo.args);
             c();
-        },1000)
+        },1000);
     })
 });
 
-describe("tests...", () => {
+xdescribe("tests...", () => {
     describe("init...", () => {
         it("components run when supplied", () => {
             const foo = sinon.spy();

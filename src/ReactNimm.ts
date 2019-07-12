@@ -198,11 +198,12 @@ export function useCallback(fn, props) {
     return res;
 }
 
-function runComponent(parentComp: RepositoryEntry) {
-    CurrentComponent = parentComp;
+function runComponent(subjectComponent: RepositoryEntry) {
+    CurrentComponent = subjectComponent;
     CurrentHook = -1;
 
-    let components = parentComp.component(parentComp.props) || [];
+    console.log(subjectComponent)
+    let components = subjectComponent.component(subjectComponent.props) || [];
     components = components.constructor===Array ? components : [components];
 
     const comps = components.map(v => {
@@ -217,35 +218,38 @@ function runComponent(parentComp: RepositoryEntry) {
 
     const runComponents = [];
     comps.forEach((comp, i) => {
-        if (!parentComp.children[i]) {
-            parentComp.children[i] = comp;
+        if (!subjectComponent.children[i]) {
+            subjectComponent.children[i] = comp;
             runComponents.push(comp);
-        } else if (parentComp.children[i].component !== comp.component) {
-            shutdownComponent(parentComp.children[i]);
-            parentComp.children[i] = comp;
+        } else if (subjectComponent.children[i].component !== comp.component) {
+            shutdownComponent(subjectComponent.children[i]);
+            subjectComponent.children[i] = comp;
             runComponents.push(comp);
         } else if (
             !shallowCompare(
                 comp.props || {},
-                parentComp.children[i].props || {}
+                subjectComponent.children[i].props || {}
             )
         ) {
-            parentComp.children[i].props = comp.props;
-            runComponents.push(parentComp.children[i]);
+            subjectComponent.children[i].props = comp.props;
+            runComponents.push(subjectComponent.children[i]);
         }
     });
 
     /*shutdown all other components exceeding current comp lenth*/
-    parentComp.children.splice(comps.length).forEach(shutdownComponent);
+    subjectComponent.children.splice(comps.length).forEach(shutdownComponent);
 
     runComponents.forEach(runComponent);
 
-    CurrentComponent = parentComp;
+    CurrentComponent = subjectComponent;
     /*run effect hooks*/
-    parentComp.hooks.forEach(hook => {
+    subjectComponent.hooks.forEach(hook => {
         if (hook.type === useEffect && hook.run) {
-            hook.terminal && hook.terminal();
-            setImmediate(() => (hook.terminal = hook.fn()));
+            
+            setImmediate(() => {
+                hook.terminal && hook.terminal();
+                hook.terminal = hook.fn();
+            });
         }
     });
 
