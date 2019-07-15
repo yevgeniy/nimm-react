@@ -87,7 +87,7 @@ Use State also exposes the guts of the hook as a 4th variable.
 
 ### useEffect
 
-Just like useEffect in React https://reactjs.org/docs/hooks-state.html
+Just like useEffect in React https://reactjs.org/docs/hooks-state.html.  Keep in mind that destructors will run immidiately before a new effect hook runs.  By that time the never version of a component has already run and 'rendered'.
 
 ### useRef
 
