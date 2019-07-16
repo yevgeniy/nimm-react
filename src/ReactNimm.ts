@@ -151,7 +151,7 @@ export function useState(def) {
     
     return [val, setVal, rerun, comp.hooks[hookIndex]];
 }
-export function useRef() {
+export function useRef(init) {
     const comp = CurrentComponent;
     if (!comp) throw "running state outside of component";
 
@@ -160,7 +160,7 @@ export function useRef() {
         comp.hooks.push({
             type: useRef,
             val: {
-                current:null
+                current:init
             }
         });
 
