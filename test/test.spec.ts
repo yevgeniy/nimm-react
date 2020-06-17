@@ -84,71 +84,155 @@ describe("tests...", () => {
 
     describe("components...", () => {
         describe("components returned from components...", () => {
-            it('can return single component', ()=> {
-                const foo = sinon.spy(props => {});
-                const comp = props => {
-                    return component(foo, { a: 1, b: 1 });
-                };
+            it('throw of key, order mismatch', ()=> {
+                const comp1=()=> {
 
-                root(component(comp));
+                }
+                const comp2=()=> {
 
-                exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
-            });
-            it("are run if new", () => {
-                const foo = sinon.spy(props => {});
-                const comp = props => {
-                    return [component(foo, { a: 1, b: 1 })];
-                };
+                }
 
-                root(component(comp));
+                try {
+                    root(component(function() {
+                        return [
+                            component(comp1, {key:1}),
+                            component(comp2, {key:2})
+                        ]
+                    }));
+                    exp(true).to.eql(false);
+                } catch(e){
+                    exp(true).to.eql(true);
+                }
+                
+            })
+            describe('by key', ()=> {
+                
+                it('new keys are added, existing ones are rerun, and old are removed', c=> {
+                    const foo = sinon.spy();
 
-                exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
-            });
-            it("are rerun only if props changed", c => {
-                const foo = sinon.spy();
-                const boo = sinon.spy();
-                const comp = props => {
-                    const [a, setA] = useState(1);
-                    setA(2);
-                    return [
-                        component(foo, { a: 1, b: 1 }),
-                        component(boo, { a: a, b: 1 })
-                    ];
-                };
-
-                root(component(comp));
-
-                setImmediate(() => {
-                    exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
-                    exp(boo.args).to.eql([[{ a: 1, b: 1 }], [{ a: 2, b: 1 }]]);
-                    c();
-                });
-            });
-            it("old components are removed", c => {
-                const foo = sinon.spy();
-                const boo = sinon.spy();
-                const moo = sinon.spy();
-                const comp = props => {
-                    const [a, setA] = useState(1);
-                    setA(2);
-                    if (a === 2) {
-                        return [component(moo, { a: a, b: 1 })];
+                    const comp1=({key})=> {
+                        useEffect(()=> {
+                            foo(key);
+                            return ()=> {
+                                foo(`remove: ${key}`)
+                            }
+                        },[key])
+                        
                     }
-                    return [
-                        component(foo, { a: a, b: 1 }),
-                        component(boo, { a: a, b: 1 })
-                    ];
-                };
+                    root(component(function() {
+                        const [a,seta]=useState(0);
+                        foo(`run: ${a}`);
+                        useEffect(()=> {
+                            if (a===0) {
+                                seta(1);
+                            } else if (a===1) {
+                                seta(2);
+                            }
+                                
+                        })
 
-                root(component(comp));
+                        if (a===0)
+                            return component(comp1, {key:2});
+                        else if (a===1)
+                            return [
+                                component(comp1, {key:1}),
+                                component(comp1, {key:2})
+                            ]
+                        else if (a===2)
+                            return [
+                                component(comp1, {key:1}),
+                                component(comp1, {key:3})
+                            ]
+                    }));
 
-                setImmediate(() => {
+                    setTimeout(()=> {
+                        exp(foo.args).to.eql([ 
+                            [ 'run: 0' ],
+                            [ 2 ],
+                            [ 'run: 1' ],
+                            [ 1 ],
+                            [ 'run: 2' ],
+                            [ 'remove: 2' ],
+                            [ 3 ] 
+                        ]);
+                        c();
+                    },400)
+                })
+
+            })
+
+
+            describe('by order', ()=> {
+
+                it('can return single component', ()=> {
+                    const foo = sinon.spy(props => {});
+                    const comp = props => {
+                        return component(foo, { a: 1, b: 1 });
+                    };
+    
+                    root(component(comp));
+    
                     exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
-                    exp(boo.args).to.eql([[{ a: 1, b: 1 }]]);
-                    exp(moo.args).to.eql([[{ a: 2, b: 1 }]]);
-                    c();
                 });
+                it("are run if new", () => {
+                    const foo = sinon.spy(props => {});
+                    const comp = props => {
+                        return [component(foo, { a: 1, b: 1 })];
+                    };
+    
+                    root(component(comp));
+    
+                    exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
+                });
+                it("are rerun only if props changed", c => {
+                    const foo = sinon.spy();
+                    const boo = sinon.spy();
+                    const comp = props => {
+                        const [a, setA] = useState(1);
+                        setA(2);
+                        return [
+                            component(foo, { a: 1, b: 1 }),
+                            component(boo, { a: a, b: 1 })
+                        ];
+                    };
+    
+                    root(component(comp));
+    
+                    setImmediate(() => {
+                        exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
+                        exp(boo.args).to.eql([[{ a: 1, b: 1 }], [{ a: 2, b: 1 }]]);
+                        c();
+                    });
+                });
+                it("old components are removed", c => {
+                    const foo = sinon.spy();
+                    const boo = sinon.spy();
+                    const moo = sinon.spy();
+                    const comp = props => {
+                        const [a, setA] = useState(1);
+                        setA(2);
+                        if (a === 2) {
+                            return [component(moo, { a: a, b: 1 })];
+                        }
+                        return [
+                            component(foo, { a: a, b: 1 }),
+                            component(boo, { a: a, b: 1 })
+                        ];
+                    };
+    
+                    root(component(comp));
+    
+                    setImmediate(() => {
+                        exp(foo.args).to.eql([[{ a: 1, b: 1 }]]);
+                        exp(boo.args).to.eql([[{ a: 1, b: 1 }]]);
+                        exp(moo.args).to.eql([[{ a: 2, b: 1 }]]);
+                        c();
+                    });
+                });
+
             });
+
+
         });
         describe("shut down component...", () => {
             it("throws error when state set", () => {

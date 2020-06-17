@@ -46,6 +46,13 @@ export class Promise {
     }
 }
 
+declare global {
+    interface Array<T> {
+        find:(fn:any)=>any;
+        findIndex:(fn:any)=>any;
+    }
+}
+
 export interface RepositoryEntry {
     component: (props: any) => any;
     props: any;
@@ -216,24 +223,12 @@ function runComponent(subjectComponent: RepositoryEntry) {
     });
 
     const runComponents = [];
-    comps.forEach((comp, i) => {
-        if (!subjectComponent.children[i]) {
-            subjectComponent.children[i] = comp;
-            runComponents.push(comp);
-        } else if (subjectComponent.children[i].component !== comp.component) {
-            shutdownComponent(subjectComponent.children[i]);
-            subjectComponent.children[i] = comp;
-            runComponents.push(comp);
-        } else if (
-            !shallowCompare(
-                comp.props || {},
-                subjectComponent.children[i].props || {}
-            )
-        ) {
-            subjectComponent.children[i].props = comp.props;
-            runComponents.push(subjectComponent.children[i]);
-        }
-    });
+    if (comps.every(v=>v.props.key))
+        doByKey();
+    else if (comps.every(v=>!v.props.key))
+        doByOrder();
+    else
+        throw "all children must have `key` prop or all children must not have `key` prop";
 
     /*shutdown all other components exceeding current comp lenth*/
     subjectComponent.children.splice(comps.length).forEach(shutdownComponent);
@@ -241,6 +236,7 @@ function runComponent(subjectComponent: RepositoryEntry) {
     runComponents.forEach(runComponent);
 
     CurrentComponent = subjectComponent;
+    
     /*run effect hooks*/
     subjectComponent.hooks.forEach(hook => {
         if (hook.type === useEffect && hook.run) {
@@ -253,6 +249,45 @@ function runComponent(subjectComponent: RepositoryEntry) {
     });
 
     CurrentComponent = null;
+
+    function doByKey() {
+        comps.forEach((comp,i) => {
+            const existingCompIndex = subjectComponent.children.findIndex(v=>v.props.key===comp.props.key);
+
+            if (existingCompIndex>-1) { /*existing comp found*/
+                const [existingComp] = subjectComponent.children.splice(existingCompIndex,1);
+                existingComp.props = comp.props;
+                subjectComponent.children.splice(i,0,existingComp);
+                runComponents.push(existingComp);
+            } else { /*new key*/
+                subjectComponent.children.splice(i,0,comp);
+                runComponents.push(comp);
+            }
+        });
+        
+            
+    }
+    function doByOrder() {
+        comps.forEach((comp, i) => {
+
+            if (!subjectComponent.children[i]) {
+                subjectComponent.children[i] = comp;
+                runComponents.push(comp);
+            } else if (subjectComponent.children[i].component !== comp.component) {
+                shutdownComponent(subjectComponent.children[i]);
+                subjectComponent.children[i] = comp;
+                runComponents.push(comp);
+            } else if (
+                !shallowCompare(
+                    comp.props || {},
+                    subjectComponent.children[i].props || {}
+                )
+            ) {
+                subjectComponent.children[i].props = comp.props;
+                runComponents.push(subjectComponent.children[i]);
+            }
+        });
+    }
 }
 function queueRerun(comp: RepositoryEntry) {
     if (RerunQueue.indexOf(comp) > -1) return;
