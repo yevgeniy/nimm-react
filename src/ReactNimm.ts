@@ -256,9 +256,13 @@ function runComponent(subjectComponent: RepositoryEntry) {
 
             if (existingCompIndex>-1) { /*existing comp found*/
                 const [existingComp] = subjectComponent.children.splice(existingCompIndex,1);
-                existingComp.props = comp.props;
+                
                 subjectComponent.children.splice(i,0,existingComp);
-                runComponents.push(existingComp);
+                if (!shallowCompare(comp.props, subjectComponent.children[i].props)) {
+                    existingComp.props = comp.props;
+                    runComponents.push(existingComp);
+                }
+                    
             } else { /*new key*/
                 subjectComponent.children.splice(i,0,comp);
                 runComponents.push(comp);
