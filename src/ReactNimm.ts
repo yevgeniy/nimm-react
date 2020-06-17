@@ -215,7 +215,7 @@ function runComponent(subjectComponent: RepositoryEntry) {
     const comps = components.map(v => {
         return {
             component: v.component,
-            props: v.props,
+            props: v.props||{},
             hooks: [],
             children: [],
             active: true
