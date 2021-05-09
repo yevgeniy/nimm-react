@@ -1205,9 +1205,9 @@ locate-path@^3.0.0:
     path-exists "^3.0.0"
 
 lodash@^4.17.11:
-  version "4.17.11"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
-  integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
+  version "4.17.21"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
+  integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
 
 log-symbols@2.2.0:
   version "2.2.0"
@@ -2158,6 +2158,16 @@ ts-node@8.0.1:
     make-error "^1.1.1"
     source-map-support "^0.5.6"
     yn "^2.0.0"
+
+ts-promise@^2.1.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/ts-promise/-/ts-promise-2.2.0.tgz#d2ad7ae4b34c17c31bf407cac2b29e4101ae94d1"
+  integrity sha512-zd4uLOBGg6DPqhX8DL1LW2R9AmwCeeCC2OPfUkStUfBxCsuRE1xtcf0eTPfxpEQpl2el9UzsnXoWBnY4V7rRuA==
+
+tsc@^1.20150623.0:
+  version "1.20150623.0"
+  resolved "https://registry.yarnpkg.com/tsc/-/tsc-1.20150623.0.tgz#4ebc3c774e169148cbc768a7342533f082c7a6e5"
+  integrity sha1-Trw8d04WkUjLx2inNCUz8ILHpuU=
 
 type-detect@4.0.8, type-detect@^4.0.0, type-detect@^4.0.5:
   version "4.0.8"
