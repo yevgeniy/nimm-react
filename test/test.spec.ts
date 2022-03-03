@@ -654,4 +654,27 @@ describe("tests...", () => {
             });
         });
     });
+
+    it('update root components', c=> {
+
+        const fn1=sinon.spy();
+        const fn2=sinon.spy();
+
+        const C1=props=> {
+            const[a]=useState(props.images);
+            fn1(props, a); /* 'a' should not change since it's the same component */
+        }
+        const C2=props=> {
+            const[a]=useState(props.images);
+            fn2(props, a); /* 'a' should not change since it's the same component */
+        }
+
+        const system=root(component(C1, {images:1}), component(C2,{images:2}));
+
+        system.update(component(C1, {images:11}), component(C2,{images:22}))
+
+        exp(fn1.args).to.eql([ [ { images: 1 }, 1 ], [ { images: 11 }, 1 ] ]);
+        exp(fn2.args).to.eql([ [ { images: 2 }, 2 ], [ { images: 22 }, 2 ] ]);
+
+    })
 });

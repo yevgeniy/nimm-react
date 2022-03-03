@@ -64,11 +64,12 @@ let CurrentComponent: RepositoryEntry = null;
 let CurrentHook: number = null;
 let RerunQueue: RepositoryEntry[] = [];
 
-export const Root: RepositoryEntry[] = [];
+const Root: RepositoryEntry[] = [];
 
 export function root(...components) {
+    const root:RepositoryEntry[] = [];
 
-    const comps = components.map(v => {
+    const comps:RepositoryEntry[] = components.map(v => {
         return {
             component: v.component,
             props: v.props,
@@ -78,13 +79,34 @@ export function root(...components) {
         };
     });
 
-    Root.push(...comps);
+    root.push(...comps);
 
     comps.forEach(runComponent);
+    
     return {
+        root,
         shutdown: () => {
-            Root.forEach(shutdownComponent);
-            Root.splice(0);
+            root.forEach(shutdownComponent);
+            root.splice(0);
+        },
+        update:(...components)=> {
+            const comps:RepositoryEntry[] = components.map(v => {
+                return {
+                    component: v.component,
+                    props: v.props,
+                    hooks: [],
+                    children: [],
+                    active: true
+                };
+            });
+            processComponents(
+                {
+                    children:root,
+                    hooks:[],
+                },
+                comps
+            );
+    
         }
     };
 }
@@ -221,6 +243,9 @@ function runComponent(subjectComponent: RepositoryEntry) {
             active: true
         };
     });
+    processComponents(subjectComponent, comps);
+}
+function processComponents(subjectComponent, comps) {
 
     const runComponents = [];
     if (comps.every(v=>v.props.key))
@@ -292,6 +317,7 @@ function runComponent(subjectComponent: RepositoryEntry) {
             }
         });
     }
+
 }
 function queueRerun(comp: RepositoryEntry) {
     if (RerunQueue.indexOf(comp) > -1) return;
