@@ -1705,9 +1705,9 @@ path-to-regexp@^1.7.0:
     isarray "0.0.1"
 
 pathval@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.0.tgz#b942e6d4bde653005ef6b71361def8727d0645e0"
-  integrity sha1-uULm1L3mUwBe9rcTYd74cn0GReA=
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/pathval/-/pathval-1.1.1.tgz#8534e77a77ce7ac5a2512ea21e0fdb8fcf6c3d8d"
+  integrity sha512-Dp6zGqpTdETdR63lehJYPeIOqpiNBNtc7BpWSLrOje7UaIsE5aY92r/AunQA7rsXvet3lrJ3JnZX29UPTKXyKQ==
 
 pify@^3.0.0:
   version "3.0.0"
@@ -2158,6 +2158,16 @@ ts-node@8.0.1:
     make-error "^1.1.1"
     source-map-support "^0.5.6"
     yn "^2.0.0"
+
+ts-promise@^2.1.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/ts-promise/-/ts-promise-2.2.0.tgz#d2ad7ae4b34c17c31bf407cac2b29e4101ae94d1"
+  integrity sha512-zd4uLOBGg6DPqhX8DL1LW2R9AmwCeeCC2OPfUkStUfBxCsuRE1xtcf0eTPfxpEQpl2el9UzsnXoWBnY4V7rRuA==
+
+tsc@^1.20150623.0:
+  version "1.20150623.0"
+  resolved "https://registry.yarnpkg.com/tsc/-/tsc-1.20150623.0.tgz#4ebc3c774e169148cbc768a7342533f082c7a6e5"
+  integrity sha1-Trw8d04WkUjLx2inNCUz8ILHpuU=
 
 type-detect@4.0.8, type-detect@^4.0.0, type-detect@^4.0.5:
   version "4.0.8"
