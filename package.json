@@ -16,7 +16,7 @@
     "@types/mocha": "5.2.7",
     "@types/node": "10.12.18",
     "chai": "4.2.0",
-    "mocha": "6.1.4",
+    "mocha": "10.2.0",
     "sinon": "7.3.2",
     "ts-node": "8.0.1",
     "ts-promise": "^2.1.0",
